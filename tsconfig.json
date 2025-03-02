@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "allowUnreachableCode": false,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "lib": ["dom", "es2015"],
+    "moduleResolution": "node",
+    "module": "esnext",
+    "target": "es2017",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    // Either one of these two pairs currently work (except for differences in
+    // BUILD.vdomKey):
+    //
+    // "jsx": "react",
+    // "jsxFactory": "h",
+    //
+    "jsx": "react-jsx",
+    "jsxImportSource": "@stencil/core",
+
+    // Need this to skip errors with Stencil type definitions for now.
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}
