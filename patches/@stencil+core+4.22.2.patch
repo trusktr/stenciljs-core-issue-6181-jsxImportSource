@@ -1,0 +1,107 @@
+diff --git a/node_modules/@stencil/core/internal/client/index.js b/node_modules/@stencil/core/internal/client/index.js
+index a89bed4..2ef40bc 100644
+--- a/node_modules/@stencil/core/internal/client/index.js
++++ b/node_modules/@stencil/core/internal/client/index.js
+@@ -478,6 +478,12 @@ Empty objects can also be the cause, look for JSX comments that became objects.`
+   if (vNodeChildren.length > 0) {
+     vnode.$children$ = vNodeChildren;
+   }
++  // TODO: with jsxFactory:h vdomKey is true, but with jsxImportSource:stencil
++  // it is false.
++  if (!window.assertedVdomKeyTrue) {
++    console.assert(BUILD8.vdomKey === true, "BUILD8.vdomKey should be true");
++    window.assertedVdomKeyTrue = true;
++  }
+   if (BUILD8.vdomKey) {
+     vnode.$key$ = key;
+   }
+diff --git a/node_modules/@stencil/core/internal/stencil-public-runtime.d.ts b/node_modules/@stencil/core/internal/stencil-public-runtime.d.ts
+index f8d600d..757b78c 100644
+--- a/node_modules/@stencil/core/internal/stencil-public-runtime.d.ts
++++ b/node_modules/@stencil/core/internal/stencil-public-runtime.d.ts
+@@ -581,7 +581,7 @@ export interface VNodeData {
+ declare namespace LocalJSX {
+     interface Element {
+     }
+-    interface IntrinsicElements {
++    interface IntrinsicElements extends JSXBase.IntrinsicElements {
+     }
+ }
+ export { LocalJSX as JSX };
+diff --git a/node_modules/@stencil/core/jsx-runtime.d.ts b/node_modules/@stencil/core/jsx-runtime.d.ts
+new file mode 100644
+index 0000000..4f277d9
+--- /dev/null
++++ b/node_modules/@stencil/core/jsx-runtime.d.ts
+@@ -0,0 +1 @@
++export type {JSX} from "@stencil/core";
+diff --git a/node_modules/@stencil/core/jsx-runtime.js b/node_modules/@stencil/core/jsx-runtime.js
+new file mode 100644
+index 0000000..602cd2f
+--- /dev/null
++++ b/node_modules/@stencil/core/jsx-runtime.js
+@@ -0,0 +1,64 @@
++// @ts-check
++
++// import {h} from './internal/stencil-core/index.js';
++import {h} from '@stencil/core';
++/** @import {VNode} from '@stencil/core' */
++
++// Reference for what runtime this file should export:
++// https://www.typescriptlang.org/tsconfig/#jsxImportSource
++
++/**
++ * This one is called when there is only one child.
++ *
++ * @param {string} tagNameOrFunction
++ * @param {{[k: string]: any, children: VNode | Node | string }} props
++ * @param {string} key
++ */
++export function jsx(tagNameOrFunction, props, key) {
++  const { children: child, ..._props } = props;
++  // @ts-expect-error https://github.com/stenciljs/core/issues/6181
++  return h(tagNameOrFunction, { ..._props, key }, child);
++}
++
++// This one is called when there are multiple children
++/**
++ * @param {string} tagNameOrFunction
++ * @param {{[k: string]: any, children: Array<VNode | Node | string> }} props
++ * @param {string} key
++ */
++export function jsxs(tagNameOrFunction, props, key) {
++  const { children, ..._props } = props
++  // @ts-expect-error https://github.com/stenciljs/core/issues/6181
++  return h(tagNameOrFunction, { ..._props, key }, ...children);
++}
++
++// NOTE a limitation: in `react-jsx` mode, element props cannot have a
++// `children` prop as the `react-jsx` transform will overwrite the `children`
++// attribute with the children of the JSX element. For example:
++//
++// <div children="foo">
++//   <img />
++// </div>
++//
++// will be transformed to:
++//
++// jsx("div", { children: "foo", children: jsx("img") })
++//
++// Whereas `h()` does not have this issue on the outside:
++//
++// h("div", { children: "foo" }, h("img"))
++
++const test1 = h('div', { id: 'foo' },
++  'bar',
++
++
++
++
++
++  // @ts-expect-error https://github.com/stenciljs/core/issues/6181
++  h('img', { src: 'foo.png' }),
++  h('span', { id: 'bar' },
++    h('img', { src: 'bar.png' })),
++);
++
++console.log('test1', test1)

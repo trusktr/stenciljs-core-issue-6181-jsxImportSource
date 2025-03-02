@@ -2,10 +2,10 @@ import {
   Component,
   //
   h,
+  Element,
 } from '@stencil/core';
 import '../../KitchenSink.js';
 import type { KitchenSink } from '../../KitchenSink.js';
-import { createEffect } from 'solid-js';
 
 @Component({
   tag: 'app-root',
@@ -16,15 +16,17 @@ export class AppRoot {
   sink!: KitchenSink;
   sink2!: KitchenSink;
 
-  componentDidLoad() {
-    createEffect(() => {
-      console.log('values outside the element:', this.sink.count, this.sink.name, this.sink.doingSomething);
-    });
+  @Element() self!: HTMLElement;
 
-    // Event listeners can be set on 'on*' event properties directly, as with builtin events.
-    this.sink2.onawesomeness = event => {
-      console.log('more awesomeness happened!', event.type);
-    };
+  componentDidLoad() {
+    // TODO: currently with jsxFactory:h refs work, but with
+    // jsxImportSource:stencil the refs are undefined.
+    console.assert(this.sink && this.sink2, 'refs should exist');
+
+    // TODO: With jsxFactory:h key attributes are not set onto the DOM, but with
+    // jsxImportSource:stencil they current are.
+    const sink = this.self.shadowRoot!.querySelector('kitchen-sink');
+    console.assert(!sink.getAttribute('key'), 'key attributes should not be set on DOM');
   }
 
   render() {
@@ -33,39 +35,29 @@ export class AppRoot {
         <span>
           <i></i>
         </span>
-        {/* Start with an initial value of 5 */}
+
+        <kitchen-sink ref={e => (this.sink2 = e)}></kitchen-sink>
+
         <kitchen-sink
           ref={e => (this.sink = e)}
-          id="sink"
-          count="5"
-          name="Mo"
-          doingSomething
-          onClick={() => {
-            this.sink.count++;
-            this.sink.name += 'Mo';
-            // Get or set attributes (dash-case)
-            this.sink.setAttribute(
-              'doing-something',
-              // Or get or set the same-name properties (camelCase)
-              this.sink.doingSomething ? 'false' : 'true',
-            );
-
-            console.log('doingSomething after attribute change:', this.sink.doingSomething);
+          foo={'yeah'}
+          bar={456}
+          baz={true}
+          onwhatever={() => {
+            console.log('whatever event');
           }}
-          onawesomeness={event => {
-            // The 'on*' event properties are also available in JSX or `html` templates.
-            console.log('awesomeness happened!', event.type);
-          }}
-        ></kitchen-sink>
-
-        <kitchen-sink ref={e => (this.sink2 = e)} id="sink2" count="1" name="Po" doingSomething="false" color="blue">
-          <p>child from light DOM, no slot specified</p>
-          <p slot="foo">child from light DOM, slotted to the foo slot</p>
+        >
+          <p>slotted content</p>
         </kitchen-sink>
       </div>
     );
 
     console.log(res);
+
+    // TODO: currently with jsxFactory:h keys are set correctly, but not with
+    // jsxImportSource:stencil.
+    console.assert((res as any).$key$, 'vnode $key$ should be set');
+
     return res;
   }
 }

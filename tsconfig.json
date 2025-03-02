@@ -11,14 +11,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
 
-    // Either one of these two pairs currently work (except for differences in
-    // BUILD.vdomKey):
+    // TODO: these two pairs of options should work the same, but currently
+    // jsxFactory:h works and jsxImportSource:stencil results in values like
+    // `BUILD.vdomKey` being false instead of true inside of `h()` calls.
     //
-    // "jsx": "react",
-    // "jsxFactory": "h",
+    // To test, uncomment the two lines below and comment out the two lines
+    // above, then see the console for failed assertions.
     //
-    "jsx": "react-jsx",
-    "jsxImportSource": "@stencil/core",
+    "jsx": "react",
+    "jsxFactory": "h",
+    //
+    // "jsx": "react-jsx",
+    // "jsxImportSource": "@stencil/core",
 
     // Need this to skip errors with Stencil type definitions for now.
     "skipLibCheck": true
